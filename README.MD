@@ -1,7 +1,3 @@
-That's great! Now, here’s a **clear, attractive, and professional** `README.md` file that provides all the necessary details for both the **NLP** and **Mobile Development** teams.  
-
----
-
 ## **🚀 Object Detection & Distance Estimation API**  
 **An AI-powered object detection system using MobileNet SSD, with distance estimation for NLP and mobile integration.**  
 
