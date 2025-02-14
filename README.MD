@@ -117,16 +117,19 @@ docker run -p 8000:8000 object_detection
 ✅ The API is now available at `http://localhost:8000/detect`.
 
 ---
+## **🐳 Docker PULL**
+```bash
+docker pull franzkingstein/blindglassbeta
+```
+
+---
 
 ## **👥 Contributors**
-- **Your Name** - AI & Computer Vision Engineer  
+- **FRANZ KINGSTEIN N** - AI & Computer Vision Engineer  
+- **JOHN JUSVIN** - AI & Computer Vision Engineer  
 
 ---
 
-## **📜 License**
-📝 This project is licensed under the **MIT License**.
-
----
 
 Now, your **NLP and Mobile teams have everything they need to integrate the model!** 🚀  
 Let me know if you need any refinements! 😊
