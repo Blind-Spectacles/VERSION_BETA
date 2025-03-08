@@ -1,14 +1,13 @@
 import cv2
 import numpy as np
 import tensorflow as tf
-from typing import Tuple, List
 
-# Load the MobileNet SSD Model
-MODEL_DIR = "saved_model"
+# Load the TensorFlow SavedModel
+MODEL_DIR = "VERSION_BETA-final-model/saved_model"
 model = tf.saved_model.load(MODEL_DIR)
 detect_fn = model.signatures["serving_default"]
 
-# COCO Class Labels
+# COCO class labels
 COCO_LABELS = {
     1: "Person", 2: "Bicycle", 3: "Car", 4: "Motorcycle", 5: "Airplane",
     6: "Bus", 7: "Train", 8: "Truck", 9: "Boat", 10: "Traffic Light",
@@ -17,21 +16,38 @@ COCO_LABELS = {
     21: "Cow", 22: "Elephant", 23: "Bear", 24: "Zebra", 25: "Giraffe"
 }
 
-def estimate_distance(bbox: Tuple[float, float, float, float], image_height: int) -> float:
-    """ Estimate actual distance using a scaling factor. """
-    ymin, xmin, ymax, xmax = bbox
-    object_height = ymax - ymin
-    estimated_distance = max(0.1, min(10, 2.0 / object_height))  # Normalize initial estimation
+# Dictionary to track object counts
+object_counts = {}
 
-    # Apply correction factor
-    corrected_distance = estimated_distance * (0.30 / 2.60)  # Scale down
-    return round(corrected_distance, 2)
+def estimate_distance(bbox, image_height):
+    """Estimate distance based on object size in the frame."""
+    ymin, xmin, ymax, xmax = bbox  # These are normalized (0 to 1)
 
-def detect_objects_and_distance(camera_input: cv2.VideoCapture) -> List[Tuple[str, float]]:
-    """ Detect objects and estimate their distances. """
-    ret, frame = camera_input.read()
-    if not ret:
-        return []
+    # Convert to absolute pixel coordinates
+    ymin, ymax = int(ymin * image_height), int(ymax * image_height)
+
+    # Compute object height in pixels
+    object_height = ymax - ymin  
+
+    # Ensure the height is a valid positive number
+    if object_height <= 0:
+        return 10.0  # Assign a default max distance if invalid
+
+    # Camera calibration parameters (tune these for your setup)
+    focal_length = 600  # Adjust for your camera
+    real_height = 1.7  # Average height of a person in meters
+
+    estimated_distance = (real_height * focal_length) / object_height
+
+    return round(estimated_distance, 2)  # Return in meters
+  # Round to 2 decimal places
+
+
+def detect_objects_and_distance(frame):
+    """Detect objects using TensorFlow and estimate distances."""
+    global object_counts
+    object_counts = {}  # Reset the dictionary each frame
+
 
     h, w, _ = frame.shape
 
@@ -39,20 +55,35 @@ def detect_objects_and_distance(camera_input: cv2.VideoCapture) -> List[Tuple[st
     input_tensor = tf.convert_to_tensor(frame)
     input_tensor = input_tensor[tf.newaxis, ...]
 
-    # Run the model
+    # Run model inference
     detections = detect_fn(input_tensor)
 
     # Extract detection data
-    boxes = detections['detection_boxes'].numpy()[0]
-    classes = detections['detection_classes'].numpy()[0].astype(int)
-    scores = detections['detection_scores'].numpy()[0]
+    boxes = detections['detection_boxes'].numpy()[0]  # Bounding boxes
+    classes = detections['detection_classes'].numpy()[0].astype(int)  # Class IDs
+    scores = detections['detection_scores'].numpy()[0]  # Confidence scores
 
-    results = []
-    for i in range(len(boxes)):
+    detected_objects = []
+
+    for i in range(len(scores)):
         if scores[i] > 0.5:  # Confidence threshold
             class_id = classes[i]
             label = COCO_LABELS.get(class_id, f"Unknown ({class_id})")
-            distance = estimate_distance(boxes[i], h)
-            results.append((label, distance))
+            bbox = boxes[i]
 
-    return results
+            # Convert bbox to absolute coordinates
+            ymin, xmin, ymax, xmax = (bbox * [h, w, h, w]).astype(int)
+
+            # Generate unique labels like "Person 1", "Car 2"
+            if label in object_counts:
+                object_counts[label] += 1
+            else:
+                object_counts[label] = 1
+            unique_label = f"{label} {object_counts[label]}"
+
+            # Estimate distance
+            distance = estimate_distance((ymin, xmin, ymax, xmax), h)
+
+            detected_objects.append((unique_label, distance, (xmin, ymin, xmax, ymax)))
+
+    return detected_objects
