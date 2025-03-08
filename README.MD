@@ -31,13 +31,50 @@ pip install -e .
 ### **🔹 Usage**
 ```python
 import cv2
+import sys
+import os
+sys.path.append(os.path.abspath('C:/Users/franz/Downloads/VERSION_BETA-final-model/VERSION_BETA-final-model'))
 from object_detection.detect_objects import detect_objects_and_distance
+from object_detection.track_object import initialize_trackers, track_objects
 
-cap = cv2.VideoCapture(0)
-result = detect_objects_and_distance(cap)
-cap.release()
+def main():
+    """Main function to run object detection and tracking."""
+    camera = cv2.VideoCapture(0)  # Open webcam
 
-print("Detected Objects and Distances:", result)
+    while True:
+        ret, frame = camera.read()
+        if not ret:
+            break
+
+        # Detect objects and their distances
+        detected_objects = detect_objects_and_distance(frame)
+
+        # Initialize trackers with detected objects
+        initialize_trackers(frame, detected_objects)
+
+        # Track objects in subsequent frames
+        results, frame = track_objects(frame)
+
+        # Display detected objects with labels
+        for label, distance, (x1, y1, x2, y2) in detected_objects:
+            print(f"Object: {label}, Distance: {distance}m, Coordinates: ({x1}, {y1}), ({x2}, {y2})")
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 0), 2)
+            cv2.putText(frame, label, (x1, y1 - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+
+        # Show the frame
+        cv2.imshow("Object Tracking", frame)
+
+        # Press 'q' to exit
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    camera.release()
+    cv2.destroyAllWindows()
+
+if __name__ == "__main__":
+    main()
+
 ```
 ✅ The function returns:
 ```json
