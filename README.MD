@@ -126,6 +126,3 @@ docker pull franzkingstein/blindglassbeta
 
 ---
 
-
-Now, your **NLP and Mobile teams have everything they need to integrate the model!** 🚀  
-Let me know if you need any refinements! 😊
