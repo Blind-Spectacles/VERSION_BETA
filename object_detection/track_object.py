@@ -7,13 +7,13 @@ def initialize_trackers(frame, objects):
     """Initialize KCF trackers for detected objects."""
     global trackers
     trackers = cv2.legacy.MultiTracker_create()
-    
+
     for label, _, (xmin, ymin, xmax, ymax) in objects:
-        tracker = cv2.legacy.TrackerKCF_create()
+        tracker = cv2.legacy.TrackerKCF_create()  # Corrected function
         bbox = (xmin, ymin, xmax - xmin, ymax - ymin)
         trackers.add(tracker, frame, bbox)
 
-def track_objects(frame):
+def track_objects(frame, trackers):
     """Track objects using KCF tracker."""
     success, boxes = trackers.update(frame)
     results = []

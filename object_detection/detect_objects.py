@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 
 # Load the TensorFlow SavedModel
-MODEL_DIR = "VERSION_BETA-final-model/saved_model"
+MODEL_DIR = "saved_model"
 model = tf.saved_model.load(MODEL_DIR)
 detect_fn = model.signatures["serving_default"]
 
