@@ -1,6 +1,7 @@
-sys
-os
 tensorflow
 opencv-python
 numpy
+scipy
+matplotlib
 Flask-API
+dotevn
