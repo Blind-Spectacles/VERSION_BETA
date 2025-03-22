@@ -3,5 +3,6 @@ opencv-python
 numpy
 scipy
 matplotlib
-Flask-API
+fastapi
+uvicorn
 dotevn
